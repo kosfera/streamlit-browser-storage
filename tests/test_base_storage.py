@@ -243,32 +243,110 @@ class BaseStorageTestCase(TestCase):
     #
     # EXISTS
     #
-    # FIXME: add it!!!
     def test_exists__exists__returns_true(self):
-        pass
 
-    # FIXME: add it!!!
+        # GIVEN base storage and some names being set
+        self.storage.set("greeting", [12, "hello", True])
+        self.storage.set("hey", "ho")
+
+        # WHEN calling `exists`
+        # THEN correct value is returned
+        assert self.storage.exists("hey") is True
+
     def test_exists__does_not_exist__returns_false(self):
-        pass
+
+        # GIVEN base storage and some names being set
+        self.storage.set("greeting", [12, "hello", True])
+        self.storage.set("hey", "ho")
+
+        # WHEN calling `exists` on unknown `name`
+        # THEN correct value is returned
+        assert self.storage.exists("hey?") is False
+
+    def test_exists__expired__returns_false(self):
+
+        # GIVEN base storage and some names being set
+        self.storage.set("greeting", [12, "hello", True])
+        self.storage.set("hey", "ho", ttl=8)
+
+        # WHEN waiting 10 seconds calling `exists`
+        # THEN correct value is returned
+        with freeze_time(self.now + self.seconds(9)):
+            assert self.storage.exists("hey") is False
 
     #
     # EXPIRES_IN_SECONDS
     #
-    # FIXME: add it!!!
-    def test_expires_in__exists__returns_true(self):
-        pass
+    def test_expires_in__exists_but_no_ttl__returns_true(self):
 
-    # FIXME: add it!!!
+        # GIVEN base storage and some names being set
+        self.storage.set("greeting", [12, "hello", True])
+        self.storage.set("hey", "ho")
+
+        # WHEN calling `expires_in`
+        # THEN correct value is returned
+        assert self.storage.expires_in("hey") is None
+
+    def test_expires_in__exists_with_ttl__returns_true(self):
+
+        with freeze_time(self.now):
+            # GIVEN base storage and some names being set
+            self.storage.set("greeting", [12, "hello", True])
+            self.storage.set("hey", "ho", ttl=10)
+
+            # WHEN calling `expires_in`
+            # THEN correct value is returned
+            assert self.storage.expires_in("hey") == 10
+
     def test_expires_in__does_not_exist__returns_false(self):
-        pass
+
+        # GIVEN base storage and some names being set
+        self.storage.set("greeting", [12, "hello", True])
+        self.storage.set("hey", "ho")
+
+        # WHEN calling `expires_in` with unknown `name`
+        # THEN correct value is returned
+        assert self.storage.expires_in("hey?") is None
+
+    def test_expires_in__expired__returns_false(self):
+
+        # GIVEN base storage and some names being set
+        self.storage.set("greeting", [12, "hello", True])
+        self.storage.set("hey", "ho", ttl=10)
+
+        # WHEN calling `expires_in`
+        # THEN correct value is returned
+        with freeze_time(self.now + self.seconds(11)):
+            assert self.storage.expires_in("hey") is None
 
     #
     # DELETE
     #
-    # FIXME: add it!!!
     def test_delete__exists__deletes(self):
-        pass
 
-    # FIXME: add it!!!
+        # GIVEN base storage
+        self.storage.set("greeting", "hello")
+        self.storage.set("what", "hey")
+
+        # WHEN calling `delete`
+        self.storage.delete("what")
+
+        # THEN correct values is delete
+        assert self.storage.component.storage == {
+            "greeting": '"hello"|'
+        }
+
     def test_delete__does_not_exist__returns_true(self):
-        pass
+
+        # GIVEN base storage
+        self.storage.set("greeting", "hello")
+        self.storage.set("what", "hey")
+
+        # WHEN calling `delete` with unknown `name`
+        self.storage.delete("what?")
+
+        # THEN correct values is delete
+        assert self.storage.component.storage == {
+            "greeting": '"hello"|',
+            "what": '"hey"|',
+        }

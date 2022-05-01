@@ -1,6 +1,6 @@
 from typing import Any, Union, Tuple
 from uuid import uuid4
-from datetime import datetime, timezone, timedelta
+from datetime import date, datetime, timezone, timedelta
 import json
 import sys
 import re
@@ -22,7 +22,6 @@ class BaseStorage:
         value,
         ttl=None,
     ):
-        # FIXME: add TTL and expires_at handling
         expires_at = None
         if ttl:
             expires_at = datetime.now(timezone.utc) + timedelta(seconds=ttl)
@@ -38,10 +37,14 @@ class BaseStorage:
     def get(self, name: str) -> Any:
         self._delete_expired()
 
-        return self._deserialize_value(self._send_to_component(Action.GET, name=name))[0]
+        return self._get_with_expiry(name)[0]
+
+    def _get_with_expiry(self, name):
+
+        value = self._send_to_component(Action.GET, name=name)
+        return self._deserialize_value(value)
 
     def get_all(self):
-        # FIXME: test it!!!
         self._delete_expired()
 
         return {
@@ -61,24 +64,26 @@ class BaseStorage:
 
         return entries
 
-    # FIXME: add it!!!!
     def expires_in(self, name: str) -> int:
-        # FIXME: test it!!!
         self._delete_expired()
 
-        pass
+        _, expires_at = self._get_with_expiry(name)
+        if not expires_at:
+            return
 
-    # FIXME: add it!!!!
+        now = int(datetime.now(timezone.utc).timestamp())
+        expires_at = int(expires_at.timestamp())
+
+        return expires_at - now
+
     def exists(self, name: str) -> bool:
-        # FIXME: test it!!!
         self._delete_expired()
 
-        pass
+        return self.get(name) is not None
 
     def delete(self, name: str) -> None:
         self._send_to_component(Action.DELETE, name=name)
 
-    # FIXME: add it!!!
     def _delete_expired(self) -> None:
         now = datetime.now(timezone.utc)
         for name, entry in self._get_all_with_expiry().items():
@@ -129,19 +134,19 @@ class BaseStorage:
 
     def _serialize_value(self, value: Any, expires_at: datetime = None):
         if expires_at:
-            return f"{json.dumps(value)}|{expires_at.isoformat()}"
+            return f"{json.dumps(value)}|{int(expires_at.timestamp())}"
 
         else:
             return f"{json.dumps(value)}|"
 
     def _deserialize_value(self, value: str) -> Tuple[Any, Union[datetime, None]]:
-        isoformat = re.compile(r"\|(\d{4}\-\d{2}-\d{2}T\d{2}\:\d{2}\:\d{2}\.\d+\+00:00|)$")
+        isoformat = re.compile(r"\|(\d+|)$")
 
         split_index = isoformat.search(value).span()[0]
         value, expires_at = value[:split_index], value[split_index + 1:]
 
         if expires_at:
-            expires_at = datetime.fromisoformat(expires_at)
+            expires_at = datetime.fromtimestamp(int(expires_at), timezone.utc)
 
         else:
             expires_at = None
