@@ -1,1 +1,4 @@
-# streamlit-cookies
+
+# Streamlit Cookies Manager Component
+
+-
