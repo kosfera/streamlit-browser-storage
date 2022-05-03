@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# node
+streamlit_browser_storage/frontend/node_modules/

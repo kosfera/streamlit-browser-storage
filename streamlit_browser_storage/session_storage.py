@@ -1,4 +1,4 @@
-from .base_storage import BaseStorage
+from base_storage import BaseStorage
 
 
 class SessionStorage(BaseStorage):

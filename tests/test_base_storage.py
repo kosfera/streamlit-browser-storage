@@ -35,11 +35,6 @@ class ComponentMock:
             else:
                 return False
 
-        elif action == Action.DELETE_ALL.value:
-            self.storage = {}
-
-            return True
-
     def clear(self):
         self.storage = {}
 
