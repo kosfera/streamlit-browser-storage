@@ -29,16 +29,11 @@ class BaseStorage:
 
     max_entry_size = NotImplementedError  # bytes
 
+    _keys = {}
+
     def __init__(self, key):
         self.key = key
-        self.key_prefixes = {
-            "set": 0,
-            "get": 0,
-            "get_all": 0,
-            "delete": 0,
-            "expires_in": 0,
-            "exists": 0,
-        }
+        self._keys = {}
 
     def set(
         self,
@@ -46,9 +41,6 @@ class BaseStorage:
         value,
         ttl=None,
     ):
-        self.key_prefixes["set"] += 1
-        self.key_prefix = f"set{self.key_prefixes['set']}"
-
         expires_at = None
         if ttl:
             expires_at = datetime.now(timezone.utc) + timedelta(seconds=ttl)
@@ -57,38 +49,31 @@ class BaseStorage:
 
         self._send_to_component(
             Action.SET,
-            key="set",
             name=name,
             value=value,
             expires_at=expires_at)
 
     def get(self, name: str) -> Any:
-        self.key_prefixes["get"] += 1
-        self.key_prefix = f"get{self.key_prefixes['get']}"
-
         self._delete_expired()
 
         return self._get_with_expiry(name)[0]
 
     def _get_with_expiry(self, name):
 
-        value = self._send_to_component(Action.GET, key="_get_with_expiry", name=name)
+        value = self._send_to_component(Action.GET, name=name)
         return self._deserialize_value(value)
 
     def get_all(self):
-        self.key_prefixes["get_all"] += 1
-        self.key_prefix = f"get_all{self.key_prefixes['get_all']}"
-
         self._delete_expired()
 
         return {
             name: entry["value"]
-            for name, entry in self._get_all_with_expiry(key="get_all").items()
+            for name, entry in self._get_all_with_expiry().items()
         }
 
-    def _get_all_with_expiry(self, key=None):
+    def _get_all_with_expiry(self):
         entries = {}
-        for name, value in (self._send_to_component(Action.GET_ALL, key=key or "_get_all_with_expiry") or {}).items():
+        for name, value in (self._send_to_component(Action.GET_ALL) or {}).items():
             value, expires_at = self._deserialize_value(value)
 
             entries[name] = {
@@ -99,9 +84,6 @@ class BaseStorage:
         return entries
 
     def expires_in(self, name: str) -> int:
-        self.key_prefixes["expires_in"] += 1
-        self.key_prefix = f"expires_in{self.key_prefixes['expires_in']}"
-
         self._delete_expired()
 
         _, expires_at = self._get_with_expiry(name)
@@ -114,18 +96,12 @@ class BaseStorage:
         return expires_at - now
 
     def exists(self, name: str) -> bool:
-        self.key_prefixes["exists"] += 1
-        self.key_prefix = f"exists{self.key_prefixes['exists']}"
-
         self._delete_expired()
 
         return self.get(name) is not None
 
     def delete(self, name: str) -> None:
-        self.key_prefixes["delete"] += 1
-        self.key_prefix = f"delete{self.key_prefixes['delete']}"
-
-        self._send_to_component(Action.DELETE, key="delete", name=name)
+        self._send_to_component(Action.DELETE, name=name)
 
     def _delete_expired(self) -> None:
         now = datetime.now(timezone.utc)
@@ -135,9 +111,13 @@ class BaseStorage:
             if expires_at and expires_at <= now:
                 self.delete(name)
 
-    def _send_to_component(self, action, key, **kwargs):
+    def _send_to_component(self, action, **kwargs):
 
-        key = f"browser_storage__{self.key_prefix}_{key}"
+        key_prefix = f"browser_storage__{action.value}"
+        self._keys.setdefault(key_prefix, 0)
+        self._keys[key_prefix] += 1
+
+        key = f"{key_prefix}_{self._keys[key_prefix]}"
 
         value = self.component(
             type=self.__class__.__name__,
@@ -214,5 +194,5 @@ class BaseStorage:
         try:
             return json.loads(value), expires_at
 
-        except json.JSONDecodeError:
+        except (TypeError, json.JSONDecodeError):
             return value, expires_at

@@ -8,9 +8,9 @@ import React, { useEffect } from "react"
 import { CookieStorage } from "./CookieStorage";
 import { LocalStorage } from "./LocalStorage";
 import { SessionStorage } from "./SessionStorage";
+import _ from "underscore";
 
-
-let prevResult: string | null = null;
+let prevResults: any = {};
 const BrowserStorage = (props: ComponentProps) => {
 
     const { args } = props
@@ -54,11 +54,10 @@ const BrowserStorage = (props: ComponentProps) => {
             break;
     }
 
-    if (result && prevResult !== result) {
-        result = JSON.stringify(result);
-        prevResult = result;
+    if (result && !_.isEqual(prevResults[action], result)) {
+        prevResults[action] = result;
 
-        Streamlit.setComponentValue(result);
+        Streamlit.setComponentValue(JSON.stringify(result));
         Streamlit.setComponentReady();
     }
 

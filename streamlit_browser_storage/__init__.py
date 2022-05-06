@@ -28,17 +28,9 @@ import streamlit as st
 
 s = CookieStorage(key="test")
 
-# if st.button("SET"):
-#     value = s.set("jason", "test")
-#     st.write(value)
-
-# if st.button("DELETE"):
-#     s.delete("jason")
-
-# if st.button("GET_ALL"):
+st.json(s.get_all())
+s.set("maciej", "test")
+s.set("maciej", "test2")
+s.set("maciej", "test3", ttl=10)
 st.write(s.get_all())
-
-# s.set("jason", "test")
-# s.get("jason")
-# s.set("jason", "test2")
-# st.write(s.expires_in("jason"))
+st.write(s.expires_in("maciej"))
