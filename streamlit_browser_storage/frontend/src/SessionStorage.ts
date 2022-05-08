@@ -1,33 +1,9 @@
 
-import Cookies from "universal-cookie"
+import { LocalStorage } from "./LocalStorage";
 
 
-export class SessionStorage {
-    cookies: Cookies;
+export class SessionStorage extends LocalStorage {
 
-    constructor() {
-        this.cookies = new Cookies();
-    }
+    storage = sessionStorage;
 
-    set(name: string, value: string, expires_at: string) {
-        this.cookies.set(name, value, {
-            path: "/",
-            sameSite: "strict",
-            expires: new Date(expires_at),
-        });
-        return true;
-    }
-
-    get(name: string): string {
-        return this.cookies.get(name) || "null|";
-    }
-
-    getAll() {
-        return this.cookies.getAll();
-    }
-
-    delete(name: string) {
-        this.cookies.remove(name, { path: "/", sameSite: "strict" })
-        return true
-    }
 }

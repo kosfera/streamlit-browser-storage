@@ -1,5 +1,8 @@
-from base_storage import BaseStorage
+from streamlit_browser_storage.base_storage import BaseStorage
 
 
 class SessionStorage(BaseStorage):
-    pass
+
+    max_entries_count = None
+
+    max_entry_size = None  # bytes

@@ -7,6 +7,7 @@ import re
 from enum import Enum, unique
 
 import streamlit as st
+from streamlit_browser_storage.component import component
 
 
 @unique
@@ -21,9 +22,25 @@ class Action(Enum):
     DELETE = "DELETE"
 
 
+@unique
+class Source(Enum):
+
+    SET = "SET"
+
+    GET = "GET"
+
+    GET_ALL = "GET_ALL"
+
+    DELETE = "DELETE"
+
+    EXPIRES_IN = "EXPIRES_IN"
+
+    EXISTS = "EXISTS"
+
+
 class BaseStorage:
 
-    component = NotImplementedError
+    component = component
 
     max_entries_count = NotImplementedError
 
@@ -33,6 +50,7 @@ class BaseStorage:
 
     def __init__(self, key):
         self.key = key
+        self.source = None
         self._keys = {}
 
     def set(
@@ -41,6 +59,8 @@ class BaseStorage:
         value,
         ttl=None,
     ):
+        self.source = Action.SET
+
         expires_at = None
         if ttl:
             expires_at = datetime.now(timezone.utc) + timedelta(seconds=ttl)
@@ -54,9 +74,26 @@ class BaseStorage:
             expires_at=expires_at)
 
     def get(self, name: str) -> Any:
-        self._delete_expired()
+        self.source = Source.GET
 
         return self._get_with_expiry(name)[0]
+
+    def expires_in(self, name: str) -> int:
+        self.source = Source.EXPIRES_IN
+
+        _, expires_at = self._get_with_expiry(name)
+        if not expires_at:
+            return
+
+        now = int(datetime.now(timezone.utc).timestamp())
+        expires_at = int(expires_at.timestamp())
+
+        return expires_at - now
+
+    def exists(self, name: str) -> bool:
+        self.source = Source.EXISTS
+
+        return self.get(name) is not None
 
     def _get_with_expiry(self, name):
 
@@ -64,7 +101,7 @@ class BaseStorage:
         return self._deserialize_value(value)
 
     def get_all(self):
-        self._delete_expired()
+        self.source = Source.GET_ALL
 
         return {
             name: entry["value"]
@@ -83,37 +120,18 @@ class BaseStorage:
 
         return entries
 
-    def expires_in(self, name: str) -> int:
-        self._delete_expired()
-
-        _, expires_at = self._get_with_expiry(name)
-        if not expires_at:
-            return
-
-        now = int(datetime.now(timezone.utc).timestamp())
-        expires_at = int(expires_at.timestamp())
-
-        return expires_at - now
-
-    def exists(self, name: str) -> bool:
-        self._delete_expired()
-
-        return self.get(name) is not None
-
     def delete(self, name: str) -> None:
+        self.source = Source.DELETE
+
         self._send_to_component(Action.DELETE, name=name)
-
-    def _delete_expired(self) -> None:
-        now = datetime.now(timezone.utc)
-        for name, entry in self._get_all_with_expiry().items():
-            expires_at = entry["expires_at"]
-
-            if expires_at and expires_at <= now:
-                self.delete(name)
 
     def _send_to_component(self, action, **kwargs):
 
-        key_prefix = f"browser_storage__{action.value}"
+        key_prefix = (
+            f"/storages/{self.__class__.__name__}"
+            f"/keys/{self.key}"
+            f"/sources/{self.source.value}"
+            f"/actions/{action.value}")
         self._keys.setdefault(key_prefix, 0)
         self._keys[key_prefix] += 1
 
@@ -125,7 +143,11 @@ class BaseStorage:
             key=key,
             **kwargs)
 
-        del st.session_state[key]
+        try:
+            del st.session_state[key]
+        except KeyError:
+            pass
+
         if value:
             return json.loads(value)
 
@@ -150,13 +172,17 @@ class BaseStorage:
 
         # NAMES count
         existing_names = self._get_all_with_expiry().keys()
-        if name not in existing_names and len(existing_names) >= self.max_entries_count:
+        if (
+            name not in existing_names and
+            self.max_entries_count and
+            len(existing_names) >= self.max_entries_count
+        ):
             raise ValueError(
                 f"Allowed maximum number of {self.max_entries_count} `names` has beed exceeded. "
                 "Remove some before adding more")
 
         # NAME + VALUE
-        if sys.getsizeof(name + value) > self.max_entry_size:
+        if self.max_entry_size and sys.getsizeof(name + value) > self.max_entry_size:
             raise ValueError(
                 "`name` and `value` combined bytes size exceeded allowed maximum "
                 f"{self.max_entry_size} bytes")

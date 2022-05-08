@@ -1,4 +1,4 @@
-from base_storage import BaseStorage
+from streamlit_browser_storage.base_storage import BaseStorage
 
 
 # Web Browser   | Maximum cookies | Maximum size per cookie

@@ -5,8 +5,7 @@ from datetime import date, datetime, timedelta, timezone
 import pytest
 from freezegun import freeze_time
 
-from streamlit_browser_storage.enums import Action
-from streamlit_browser_storage.base_storage import BaseStorage
+from streamlit_browser_storage.base_storage import BaseStorage, Action
 
 
 class ComponentMock:
@@ -14,7 +13,7 @@ class ComponentMock:
     def __init__(self):
         self.storage = {}
 
-    def __call__(self, action, name=None, value=None, expires_at=None, ttl=None, key=None):
+    def __call__(self, action, name=None, value=None, expires_at=None, type=None, key=None):
         if action == Action.SET.value:
             self.storage[name] = value
             return True
@@ -51,7 +50,7 @@ class BaseStorageWithMock(BaseStorage):
 class BaseStorageTestCase(TestCase):
 
     def setUp(self):
-        self.storage = BaseStorageWithMock()
+        self.storage = BaseStorageWithMock(key="test")
         self.storage.component.clear()
 
         self.now = datetime.now(timezone.utc)

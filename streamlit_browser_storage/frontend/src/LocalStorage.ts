@@ -1,33 +1,54 @@
 
-import Cookies from "universal-cookie"
-
+import _ from "underscore";
 
 export class LocalStorage {
-    cookies: Cookies;
 
-    constructor() {
-        this.cookies = new Cookies();
-    }
+    storage = localStorage;
 
     set(name: string, value: string, expires_at: string) {
-        this.cookies.set(name, value, {
-            path: "/",
-            sameSite: "strict",
-            expires: new Date(expires_at),
-        });
+        this.storage.setItem(name, value);
         return true;
     }
 
     get(name: string): string {
-        return this.cookies.get(name) || "null|";
+        this.deleteExpired();
+        return this.storage.getItem(name) || "null|";
     }
 
     getAll() {
-        return this.cookies.getAll();
+        this.deleteExpired();
+
+        let all: any = {};
+        Object.keys(this.storage).forEach(name => {
+            let value = this.storage.getItem(name);
+
+            all[name] = value;
+        });
+        return all;
     }
 
     delete(name: string) {
-        this.cookies.remove(name, { path: "/", sameSite: "strict" })
+        this.storage.removeItem(name);
         return true
+    }
+
+    deleteExpired() {
+        let now = Date.now();
+
+        Object.keys(this.storage).forEach(name => {
+            let value = this.storage.getItem(name);
+
+            if (!_.isNull(value)) {
+                let m = /\|(\d+|)$/.exec(value);
+
+                if (!_.isNull(m) && m[1].length > 0) {
+                    let expiresAt = 1000 * parseInt(m[1]);
+
+                    if (now >= expiresAt) {
+                        this.delete(name);
+                    }
+                }
+            }
+        });
     }
 }
