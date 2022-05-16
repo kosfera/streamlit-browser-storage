@@ -1,3 +1,4 @@
+import json
 from datetime import date, datetime, timedelta, timezone
 from unittest import TestCase
 
@@ -14,23 +15,23 @@ class ComponentMock:
     def __call__(self, action, name=None, value=None, expires_at=None, type=None, key=None):
         if action == Action.SET.value:
             self.storage[name] = value
-            return True
+            return "true"
 
         elif action == Action.GET.value:
-            return self.storage.get(name) or "null|"
+            return json.dumps(self.storage.get(name)) or "null|"
 
         elif action == Action.GET_ALL.value:
-            return self.storage
+            return json.dumps(self.storage)
 
         elif action == Action.DELETE.value:
             try:
                 del self.storage[name]
 
             except KeyError:
-                return True
+                return "true"
 
             else:
-                return False
+                return "false"
 
     def clear(self):
         self.storage = {}
@@ -171,19 +172,6 @@ class BaseStorageTestCase(TestCase):
         # THEN correct values is returned
         assert value == [12, "hello", True]
 
-    def test_get__exists_but_expired__none_is_returned(self):
-
-        # GIVEN base storage and some names being set
-        self.storage.set("greeting", "hello", ttl=10)
-        self.storage.set("hey", "ho")
-
-        # WHEN waiting 11 seconds and calling `get`
-        with freeze_time(self.now + self.seconds(11)):
-            value = self.storage.get("greeting")
-
-        # THEN correct values is returned
-        assert value is None
-
     def test_get__does_not_exist__is_not_fetched(self):
 
         # GIVEN base storage and some names being set
@@ -217,22 +205,6 @@ class BaseStorageTestCase(TestCase):
             "hey": "ho",
         }
 
-    def test_get_all__deletes_expired__fetches_all(self):
-
-        # GIVEN base storage and some names being set
-        self.storage.set("greeting", [12, "hello", True])
-        self.storage.set("hey1", "ho1", ttl=8)
-        self.storage.set("hey2", "ho2", ttl=1)
-        self.storage.set("hey3", "ho3", ttl=1)
-
-        # WHEN waiting 6 seconds calling `get_all`
-        # THEN correct value is returned
-        with freeze_time(self.now + self.seconds(6)):
-            assert self.storage.get_all() == {
-                "greeting": [12, "hello", True],
-                "hey1": "ho1",
-            }
-
     #
     # EXISTS
     #
@@ -255,17 +227,6 @@ class BaseStorageTestCase(TestCase):
         # WHEN calling `exists` on unknown `name`
         # THEN correct value is returned
         assert self.storage.exists("hey?") is False
-
-    def test_exists__expired__returns_false(self):
-
-        # GIVEN base storage and some names being set
-        self.storage.set("greeting", [12, "hello", True])
-        self.storage.set("hey", "ho", ttl=8)
-
-        # WHEN waiting 10 seconds calling `exists`
-        # THEN correct value is returned
-        with freeze_time(self.now + self.seconds(9)):
-            assert self.storage.exists("hey") is False
 
     #
     # EXPIRES_IN_SECONDS
@@ -300,17 +261,6 @@ class BaseStorageTestCase(TestCase):
         # WHEN calling `expires_in` with unknown `name`
         # THEN correct value is returned
         assert self.storage.expires_in("hey?") is None
-
-    def test_expires_in__expired__returns_false(self):
-
-        # GIVEN base storage and some names being set
-        self.storage.set("greeting", [12, "hello", True])
-        self.storage.set("hey", "ho", ttl=10)
-
-        # WHEN calling `expires_in`
-        # THEN correct value is returned
-        with freeze_time(self.now + self.seconds(11)):
-            assert self.storage.expires_in("hey") is None
 
     #
     # DELETE
