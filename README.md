@@ -5,4 +5,4 @@
 https://stackoverflow.com/questions/2989284/what-is-the-max-size-of-localstorage-values
 https://stackoverflow.com/questions/640938/what-is-the-maximum-size-of-a-web-browsers-cookies-key
 
-![build status](https://github.com/kosfera/streamlit-browser-storage/actions/workflows/lint_and_test.yml/badge.svg)
+[![build status](https://github.com/kosfera/streamlit-browser-storage/workflows/lint_and_test/badge.svg?branch=master)](https://github.com/pypyr/pypyr/actions)
