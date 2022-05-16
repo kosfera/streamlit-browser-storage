@@ -1,6 +1,6 @@
 import streamlit as st
-from streamlit_browser_storage import CookieStorage
 
+from streamlit_browser_storage import CookieStorage
 
 s = CookieStorage(key="test")
 

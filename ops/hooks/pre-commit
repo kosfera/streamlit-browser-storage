@@ -1,0 +1,5 @@
+#!/bin/sh
+
+pypyr ops/lint
+pypyr ops/check_format
+pypyr ops/test

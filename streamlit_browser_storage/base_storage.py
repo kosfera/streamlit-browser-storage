@@ -1,12 +1,11 @@
-from ast import excepthandler
-from typing import Any, Union, Tuple
-from datetime import datetime, timezone, timedelta
 import json
-import sys
 import re
+import sys
+from datetime import datetime, timedelta, timezone
 from enum import Enum, unique
-
+from typing import Any, Tuple, Union
 import streamlit as st
+
 from streamlit_browser_storage.component import component
 
 
@@ -67,11 +66,7 @@ class BaseStorage:
 
         name, value, expires_at = self._validate(name, value, expires_at)
 
-        self._send_to_component(
-            Action.SET,
-            name=name,
-            value=value,
-            expires_at=expires_at)
+        self._send_to_component(Action.SET, name=name, value=value, expires_at=expires_at)
 
     def get(self, name: str) -> Any:
         self.source = Source.GET
@@ -103,10 +98,7 @@ class BaseStorage:
     def get_all(self):
         self.source = Source.GET_ALL
 
-        return {
-            name: entry["value"]
-            for name, entry in self._get_all_with_expiry().items()
-        }
+        return {name: entry["value"] for name, entry in self._get_all_with_expiry().items()}
 
     def _get_all_with_expiry(self):
         entries = {}
@@ -131,17 +123,14 @@ class BaseStorage:
             f"/storages/{self.__class__.__name__}"
             f"/keys/{self.key}"
             f"/sources/{self.source.value}"
-            f"/actions/{action.value}")
+            f"/actions/{action.value}"
+        )
         self._keys.setdefault(key_prefix, 0)
         self._keys[key_prefix] += 1
 
         key = f"{key_prefix}_{self._keys[key_prefix]}"
 
-        value = self.component(
-            type=self.__class__.__name__,
-            action=action.value,
-            key=key,
-            **kwargs)
+        value = self.component(type=self.__class__.__name__, action=action.value, key=key, **kwargs)
 
         try:
             del st.session_state[key]
@@ -162,7 +151,8 @@ class BaseStorage:
         # VALUE validation
         if not value:
             raise ValueError(
-                "One must provide non-empty `value` otherwise just delete that specific entry")
+                "One must provide non-empty `value` otherwise just delete that specific entry"
+            )
 
         try:
             value = self._serialize_value(value, expires_at)
@@ -173,19 +163,21 @@ class BaseStorage:
         # NAMES count
         existing_names = self._get_all_with_expiry().keys()
         if (
-            name not in existing_names and
-            self.max_entries_count and
-            len(existing_names) >= self.max_entries_count
+            name not in existing_names
+            and self.max_entries_count
+            and len(existing_names) >= self.max_entries_count
         ):
             raise ValueError(
                 f"Allowed maximum number of {self.max_entries_count} `names` has beed exceeded. "
-                "Remove some before adding more")
+                "Remove some before adding more"
+            )
 
         # NAME + VALUE
         if self.max_entry_size and sys.getsizeof(name + value) > self.max_entry_size:
             raise ValueError(
                 "`name` and `value` combined bytes size exceeded allowed maximum "
-                f"{self.max_entry_size} bytes")
+                f"{self.max_entry_size} bytes"
+            )
 
         if expires_at:
             expires_at = expires_at.isoformat()
@@ -209,7 +201,7 @@ class BaseStorage:
         expires_at = None
         if m:
             split_index = m.span()[0]
-            value, expires_at = value[:split_index], value[split_index + 1:]
+            value, expires_at = value[:split_index], value[split_index + 1 :]
 
         if expires_at:
             expires_at = datetime.fromtimestamp(int(expires_at), timezone.utc)

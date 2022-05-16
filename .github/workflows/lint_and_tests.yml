@@ -1,0 +1,40 @@
+name: Lint and tests
+on: push
+
+jobs:
+  tests:
+    name: Unit Tests - working branch
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+          architecture: "x64"
+
+      - name: Display Python version
+        run: python -V
+
+      - name: Install pypyr & poetry
+        working-directory: .
+        run: pip install pypyr poetry
+
+      - name: Install dependencies
+        working-directory: .
+        run: pypyr ops/install
+
+      - name: Launch Linter
+        working-directory: .
+        run: pypyr ops/lint
+
+      - name: Launch Check Format
+        working-directory: .
+        run: pypyr ops/check_format
+
+      - name: Launch tests
+        working-directory: .
+        run: pypyr ops/test

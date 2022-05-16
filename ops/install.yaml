@@ -1,0 +1,17 @@
+context_parser: pypyr.parser.keyvaluepairs
+steps:
+  - pypyr.steps.configvars
+  # HOOKS
+  - name: pypyr.steps.echo
+    in:
+      echoMe: Installing all git hooks
+  - name: pypyr.steps.cmd
+    in:
+      cmd: cp ops/hooks/pre-commit .git/hooks
+  # PYTHON DEPEDENCIES
+  - name: pypyr.steps.echo
+    in:
+      echoMe: Installing all python depedencies
+  - name: pypyr.steps.cmd
+    in:
+      cmd: poetry install

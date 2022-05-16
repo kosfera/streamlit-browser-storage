@@ -1,0 +1,9 @@
+
+vars:
+  max_line_length: 100
+  src_dir: streamlit_browser_storage
+  test_dir: tests
+  min_coverage: 60
+  coverage_dir: coverage_html
+  linter_ignore_errors: D100,D101,D102,D103,D104,D105,D106,D107,D202,E203,E231,W503,N806,W504
+  python_target_version: py39

@@ -1,0 +1,17 @@
+context_parser: pypyr.parser.keyvaluepairs
+steps:
+  - pypyr.steps.configvars
+  # ops/install
+  - name: pypyr.steps.echo
+    in:
+      echoMe: Run ops/install
+  - name: pypyr.steps.cmd
+    in:
+      cmd: pypyr ops/install
+  # act
+  - name: pypyr.steps.echo
+    in:
+      echoMe: Installing ACT
+  - name: pypyr.steps.cmd
+    in:
+      cmd: brew install act

@@ -1,0 +1,10 @@
+context_parser: pypyr.parser.keyvaluepairs
+steps:
+  - pypyr.steps.configvars
+  # run act on push
+  - name: pypyr.steps.echo
+    in:
+      echoMe: Run github on push
+  - name: pypyr.steps.cmd
+    in:
+      cmd: act --container-architecture=linux/amd64 push

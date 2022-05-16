@@ -1,0 +1,28 @@
+context_parser: pypyr.parser.keyvaluepairs
+steps:
+  - pypyr.steps.configvars
+  - name: pypyr.steps.default
+    comment: set default values for optional cli inputs
+    in:
+      defaults:
+        tests: '{test_dir}'
+        coverage: '{min_coverage}'
+  # TESTS
+  - name: pypyr.steps.echo
+    in:
+      echoMe: Running tests
+  - name: pypyr.steps.cmd
+    in:
+      cmd: poetry run pytest --cov={src_dir} --cov-fail-under={coverage} -r w -s -vv {tests}
+  # COVERAGE REPORT
+  - name: pypyr.steps.echo
+    in:
+      echoMe: Creating coverage report
+  - name: pypyr.steps.cmd
+    in:
+      cmd: poetry run coverage html -d {coverage_dir}
+
+on_failure:
+  - name: pypyr.steps.echo
+    in:
+      echoMe: One can use `pypyr ops/test tests=./tests/<some_module>.py` in order to run only particular tests.

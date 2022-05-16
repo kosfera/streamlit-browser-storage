@@ -1,0 +1,17 @@
+context_parser: pypyr.parser.keyvaluepairs
+steps:
+  - pypyr.steps.configvars
+  # ISORT
+  - name: pypyr.steps.echo
+    in:
+      echoMe: Sort Python imports
+  - name: pypyr.steps.cmd
+    in:
+      cmd: poetry run isort -l {max_line_length} .
+  # BLACK
+  - name: pypyr.steps.echo
+    in:
+      echoMe: Enforce PEP 8 compliant formatting
+  - name: pypyr.steps.cmd
+    in:
+      cmd: poetry run black -l {max_line_length} -t {python_target_version} .

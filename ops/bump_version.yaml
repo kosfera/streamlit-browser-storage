@@ -1,0 +1,15 @@
+context_parser: pypyr.parser.keyvaluepairs
+steps:
+  - pypyr.steps.configvars
+  - name: pypyr.steps.default
+    comment: set default values for optional cli inputs
+    in:
+      defaults:
+        rule: patch
+  # BUMP
+  - name: pypyr.steps.echo
+    in:
+      echoMe: Bump up the version, using rule '{rule}'
+  - name: pypyr.steps.cmd
+    in:
+      cmd: poetry version {rule}

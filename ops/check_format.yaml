@@ -1,0 +1,14 @@
+context_parser: pypyr.parser.keyvaluepairs
+steps:
+  - pypyr.steps.configvars
+  - name: pypyr.steps.echo
+    in:
+      echoMe: Enforce PEP 8 compliant formatting
+  - name: pypyr.steps.cmd
+    in:
+      cmd: poetry run black --check -l {max_line_length} -t {python_target_version} .
+
+on_failure:
+  - name: pypyr.steps.echo
+    in:
+      echoMe: Please run `pypyr ops/format` in order to impose automatic formatting of your code.

@@ -1,15 +1,13 @@
-
-from unittest import TestCase
 from datetime import date, datetime, timedelta, timezone
+from unittest import TestCase
 
 import pytest
 from freezegun import freeze_time
 
-from streamlit_browser_storage.base_storage import BaseStorage, Action
+from streamlit_browser_storage.base_storage import Action, BaseStorage
 
 
 class ComponentMock:
-
     def __init__(self):
         self.storage = {}
 
@@ -48,13 +46,13 @@ class BaseStorageWithMock(BaseStorage):
 
 
 class BaseStorageTestCase(TestCase):
-
     def setUp(self):
         self.storage = BaseStorageWithMock(key="test")
         self.storage.component.clear()
 
         self.now = datetime.now(timezone.utc)
         self.seconds = lambda s: timedelta(seconds=s)
+
     #
     # SET
     #
@@ -65,9 +63,7 @@ class BaseStorageTestCase(TestCase):
         self.storage.set("greeting", "hello")
 
         # THEN correct values is set
-        assert self.storage.component.storage == {
-            "greeting": '"hello"|'
-        }
+        assert self.storage.component.storage == {"greeting": '"hello"|'}
 
     def test_set__complex_value__is_set(self):
 
@@ -107,7 +103,8 @@ class BaseStorageTestCase(TestCase):
             self.storage.set("greetings", None)
 
         assert e.value.args == (
-            "One must provide non-empty `value` otherwise just delete that specific entry",)
+            "One must provide non-empty `value` otherwise just delete that specific entry",
+        )
 
     def test_set__value_is_not_serializable__is_not_set(self):
 
@@ -131,8 +128,9 @@ class BaseStorageTestCase(TestCase):
             self.storage.set("greetings", "what?")
 
         assert e.value.args == (
-            f"Allowed maximum number of 10 `names` has beed exceeded. "
-            "Remove some before adding more",)
+            "Allowed maximum number of 10 `names` has beed exceeded. "
+            "Remove some before adding more",
+        )
 
     def test_set__name_value_size_too_large__is_not_set(self):
 
@@ -143,7 +141,8 @@ class BaseStorageTestCase(TestCase):
             self.storage.set("greetings", (self.storage.max_entry_size - 8) * "a")
 
         assert e.value.args == (
-            "`name` and `value` combined bytes size exceeded allowed maximum 1000 bytes",)
+            "`name` and `value` combined bytes size exceeded allowed maximum 1000 bytes",
+        )
 
     #
     # GET
@@ -326,9 +325,7 @@ class BaseStorageTestCase(TestCase):
         self.storage.delete("what")
 
         # THEN correct values is delete
-        assert self.storage.component.storage == {
-            "greeting": '"hello"|'
-        }
+        assert self.storage.component.storage == {"greeting": '"hello"|'}
 
     def test_delete__does_not_exist__returns_true(self):
 
