@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "streamlit-browser-storage"
-version = "0.3.5"
+version = "0.3.6"
 description = ""
 authors = ["Maciej <964938+maciejATcosphere@users.noreply.github.com>"]
 license = "MIT License"

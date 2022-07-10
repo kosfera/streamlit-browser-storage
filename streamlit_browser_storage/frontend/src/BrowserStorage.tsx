@@ -43,7 +43,6 @@ const BrowserStorage = (props: ComponentProps) => {
             break;
 
         case "GET_ALL":
-            // # self._delete_expired()
             result = storage.getAll() || {};
             break;
 
@@ -56,7 +55,6 @@ const BrowserStorage = (props: ComponentProps) => {
     }
 
     if (result && !_.isEqual(prevResults[action], result)) {
-        console.log("SENDING TO FE", action);
         prevResults[action] = result;
 
         Streamlit.setComponentValue(JSON.stringify(result));
