@@ -131,3 +131,4 @@ dmypy.json
 
 # node
 streamlit_browser_storage/frontend/node_modules/
+!streamlit_browser_storage/frontend/build
