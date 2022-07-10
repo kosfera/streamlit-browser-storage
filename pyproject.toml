@@ -4,6 +4,7 @@ version = "0.3.1"
 description = ""
 authors = ["Maciej <964938+maciejATcosphere@users.noreply.github.com>"]
 license = "MIT License"
+repository = "https://github.com/kosfera/streamlit-browser-storage"
 
 [tool.poetry.dependencies]
 python = "^3.9"
