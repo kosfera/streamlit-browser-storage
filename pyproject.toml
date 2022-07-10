@@ -1,14 +1,14 @@
 [tool.poetry]
 name = "streamlit-browser-storage"
-version = "0.3.1"
+version = "0.3.4"
 description = ""
 authors = ["Maciej <964938+maciejATcosphere@users.noreply.github.com>"]
 license = "MIT License"
 repository = "https://github.com/kosfera/streamlit-browser-storage"
 
 [tool.poetry.dependencies]
-python = "^3.9"
-streamlit = "^1.8.1"
+python = ">=3.9,<4.0"
+streamlit = "^1.10.0"
 
 [tool.poetry.dev-dependencies]
 pypyr = "^5.4.0"

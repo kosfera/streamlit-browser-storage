@@ -1,0 +1,41 @@
+context_parser: pypyr.parser.keyvaluepairs
+steps:
+  - pypyr.steps.configvars
+
+  - name: pypyr.steps.cmd
+    description: build frontend
+    in:
+      cmd:
+        run: npm run build
+        cwd: streamlit_browser_storage/frontend
+
+  - name: pypyr.steps.cmd
+    description: build wheel
+    in:
+      cmd:
+        run:
+          - rm -rf dist
+          - poetry build -f wheel
+
+  - name: pypyr.steps.cmd
+    description: deploy to pypi
+    in:
+      cmd:
+        run:
+          - poetry publish
+
+on_success:
+  - name: pypyr.steps.cmd
+    in:
+      cmd:
+        run:
+          - rm -rf dist
+          - rm -rf streamlit_browser_storage/frontend/build
+
+on_failure:
+  - name: pypyr.steps.cmd
+    in:
+      cmd:
+        run:
+          - rm -rf dist
+          - rm -rf streamlit_browser_storage/frontend/build
